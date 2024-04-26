@@ -1,0 +1,109 @@
+version: '3.8'
+services:
+  plex:
+    image: linuxserver/plex
+    container_name: plex
+    network_mode: host
+    environment:
+      - TZ=${TZ}
+      - PUID=${PUID}
+      - PGID={PGID}
+      - VERSION=docker
+    volumes:
+      - /opt/docker/plex/:/config
+      - /media/extHD/movies:/data/movies
+      - /media/extHD/tv:/data/tv
+
+  sonarr:
+    image: linuxserver/sonarr
+    container_name: sonarr
+    dns:
+      - 8.8.8.8
+      - 8.8.8.4
+    networks:
+      app_network:
+        ipv4_address: 172.30.0.11
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - /opt/docker/sonarr/:/config
+      - /media/extHD/tv:/tv
+      - /media/extHD/downloads:/downloads
+    ports:
+      - "8989:8989"
+
+  radarr:
+    image: linuxserver/radarr
+    container_name: radarr
+    networks:
+      app_network:
+        ipv4_address: 172.30.0.12
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - /opt/docker/radarr/:/config
+      - /media/extHD/movies:/movies
+      - /media/extHD/downloads:/downloads
+    ports:
+      - "7878:7878"
+
+  prowlarr:
+    image: linuxserver/prowlarr
+    container_name: prowlarr
+    networks:
+      app_network:
+        ipv4_address: 172.30.0.13
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - /opt/docker/prowlarr/:/config
+    ports:
+      - "9696:9696"
+
+  transmission:
+    image: linuxserver/transmission
+    container_name: transmission
+    networks:
+      app_network:
+        ipv4_address: 172.30.0.14
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - /opt/docker/transmission/:/config
+      - /media/extHD/downloads:/downloads
+    ports:
+      - "9091:9091"  # Adjust if necessary
+      - "51413:51413"
+      - "51413:51413/udp"
+    dns:
+      - 1.1.1.1
+      - 1.0.0.1
+    restart: unless-stopped
+
+
+  flaresolverr:
+    image: flaresolverr/flaresolverr
+    container_name: flaresolverr
+    networks:
+      app_network:
+        ipv4_address: 172.30.0.15
+    environment:
+      - LOG_LEVEL=info
+    ports:
+      - "8191:8191"
+    restart: unless-stopped
+
+networks:
+  app_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.0.0/16
